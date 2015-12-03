@@ -5,7 +5,7 @@ var express  = require('express'),
 		bodyParser = require('body-parser');
 app.use(bodyParser.json({ type: 'application/json' }));
 
-app.set('port', 3006);
+app.set('port', process.env.PINTEREST_STUB_PORT || 3006);
 app.all('*', function(req, res, next) {
     res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
     res.header("Access-Control-Allow-Origin", "*");
