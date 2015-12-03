@@ -31,6 +31,11 @@ app.post('/charge', function(req, res){
     });
 });
 
+app.get('/status', function(req, res){
+    var status = "All Good";
+    res.send(200, status);
+});
+
 server.listen(app.get('port'), function () {
   require(__dirname + '/document')(app._router.stack);
   console.log('NailArtist payment service listening on port ' + server.address().port);
