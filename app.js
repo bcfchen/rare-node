@@ -13,8 +13,12 @@ app.all('*', function(req, res, next) {
 });
 
 app.post('/charge', function(req, res){
- var stripeToken = req.body.id;
-    var amount = 1000;
+ var card = req.body.card;
+ var amount = req.body.amount;
+ var stripeToken = card.id;
+
+console.log("card ", card);
+console.log("amount ", amount);
 
     stripe.charges.create({
         card: stripeToken,
