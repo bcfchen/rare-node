@@ -1,7 +1,7 @@
 var express  = require('express'),
 		app  = express(),
     server   = require('http').createServer(app),
-     stripe = require('stripe')('sk_live_pIpwOXMlPSL8CbPDdlxLDS3U'),
+     stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
 		bodyParser = require('body-parser');
 app.use(bodyParser.json({ type: 'application/json' }));
 
