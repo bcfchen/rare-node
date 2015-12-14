@@ -23,7 +23,8 @@ console.log("amount ", amount);
     stripe.charges.create({
         card: stripeToken,
         currency: 'usd',
-        amount: amount
+        amount: amount,
+        receipt_email: card.email
     },
     function(err, charge) {
         if (err) {
