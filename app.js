@@ -18,25 +18,44 @@ app.get('/stripe/charge', function(req, res) {
     var card = req.body.card;
     var amount = req.body.amount;
     var stripeToken = card.id;
+    var customerId = req.body.customerId;
 
     console.log("card ", card);
     console.log("amount ", amount);
 
-    stripe.charges.create({
-            card: stripeToken,
-            currency: 'usd',
-            amount: amount,
-            receipt_email: card.email
-        },
-        function(err, charge) {
-            if (err) {
-                res.send(500, err);
-            } else {
-                console.log("charge", charge);
-                res.send(200, charge);
-            }
-        });
+    upsertStripeCustomer(stripeToken, customerId).then(function() {
+        stripe.charges.create({
+                card: stripeToken,
+                currency: 'usd',
+                amount: amount,
+                receipt_email: card.email
+            },
+            function(err, charge) {
+                if (err) {
+                    res.send(500, err);
+                } else {
+                    console.log("charge", charge);
+                    res.send(200, charge);
+                }
+            });
+    });
 });
+
+function upsertStripeCustomer(tokenId, customerId) {
+    if (customerId) {
+        return stripe.customers.update(customerId, {
+            source: tokenId
+        }, function(err, customer) {
+            // asynchronously called
+        });
+    } else {
+        return stripe.customers.create({
+            source: "tokenId" // obtained with Stripe.js
+        }, function(err, customer) {
+            // asynchronously called
+        });
+    }
+}
 
 app.get('/stripe/getCustomer/:customerId', function(req, res) {
     try {
