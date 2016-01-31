@@ -14,7 +14,7 @@ app.all('*', function(req, res, next) {
     next();
 });
 
-app.get('/charge', function(req, res) {
+app.get('/stripe/charge', function(req, res) {
     var card = req.body.card;
     var amount = req.body.amount;
     var stripeToken = card.id;
@@ -38,31 +38,7 @@ app.get('/charge', function(req, res) {
         });
 });
 
-app.post('/charge', function(req, res) {
-    var card = req.body.card;
-    var amount = req.body.amount;
-    var stripeToken = card.id;
-
-    console.log("card ", card);
-    console.log("amount ", amount);
-
-    stripe.charges.create({
-            card: stripeToken,
-            currency: 'usd',
-            amount: amount,
-            receipt_email: card.email
-        },
-        function(err, charge) {
-            if (err) {
-                res.send(500, err);
-            } else {
-                console.log("charge", charge);
-                res.send(200, charge);
-            }
-        });
-});
-
-app.get('/getCustomer/:customerId', function(req, res) {
+app.get('/stripe/getCustomer/:customerId', function(req, res) {
     try {
         var customerId = req.params && req.params.customerId ? req.params.customerId : undefined;
         if (customerId) {
