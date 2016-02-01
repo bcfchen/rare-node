@@ -14,7 +14,7 @@ app.all('*', function(req, res, next) {
     next();
 });
 
-app.get('/stripe/charge', function(req, res) {
+app.post('/stripe/charge', function(req, res) {
     var card = req.body.card;
     var amount = req.body.amount;
     var stripeToken = card.id;
@@ -23,9 +23,10 @@ app.get('/stripe/charge', function(req, res) {
     console.log("card ", card);
     console.log("amount ", amount);
 
-    upsertStripeCustomer(stripeToken, customerId).then(function() {
+    upsertStripeCustomer(card.id, customerId).then(function(customer) {
+        console.log("upserted customer: ", customer);
         stripe.charges.create({
-                card: stripeToken,
+                customer: customer.id,
                 currency: 'usd',
                 amount: amount,
                 receipt_email: card.email
@@ -47,12 +48,17 @@ function upsertStripeCustomer(tokenId, customerId) {
             source: tokenId
         }, function(err, customer) {
             // asynchronously called
+            console.log("updated customer:", err);
+            return err;
         });
     } else {
+        console.log("trying with token:", tokenId);
         return stripe.customers.create({
-            source: "tokenId" // obtained with Stripe.js
+            source: tokenId // obtained with Stripe.js
         }, function(err, customer) {
             // asynchronously called
+            console.log("created customer:", err);
+            return err;
         });
     }
 }
