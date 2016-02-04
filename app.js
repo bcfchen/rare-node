@@ -20,13 +20,41 @@ app.post('/stripe/charge', function(req, res) {
     var stripeToken = card.id;
     var customerId = req.body.customerId;
 
+    // handle undefined tokenId AND customerId case
+    if (!customerId && !stripeToken) {
+        res.send(500, "Must provide customerId or tokenId");
+    }
+
     console.log("card ", card);
     console.log("amount ", amount);
 
-    upsertStripeCustomer(card.id, customerId).then(function(customer) {
-        console.log("upserted customer: ", customer);
+    /* if card.id (tokenId) exists, this is a new customer, so upsert customer 
+       first then create charge
+    */
+    if (stripeToken) {
+        upsertStripeCustomer(stripeToken, customerId).then(function(customer) {
+            console.log("upserted customer: ", customer);
+            stripe.charges.create({
+                    customer: customer.id,
+                    currency: 'usd',
+                    amount: amount,
+                    receipt_email: card.email
+                },
+                function(err, charge) {
+                    if (err) {
+                        res.send(500, err);
+                    } else {
+                        console.log("charge", charge);
+                        res.send(200, charge);
+                    }
+                });
+        });
+    } else {
+        /* if card.id does not exist, then this is an existing customer, 
+           so create charge directly with customer id
+        */
         stripe.charges.create({
-                customer: customer.id,
+                customer: customerId,
                 currency: 'usd',
                 amount: amount,
                 receipt_email: card.email
@@ -39,7 +67,8 @@ app.post('/stripe/charge', function(req, res) {
                     res.send(200, charge);
                 }
             });
-    });
+    }
+
 });
 
 function upsertStripeCustomer(tokenId, customerId) {
