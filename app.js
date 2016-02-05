@@ -28,10 +28,10 @@ app.post('/stripe/charge', function(req, res) {
     console.log("card ", card);
     console.log("amount ", amount);
 
-    /* if card.id (tokenId) exists, this is a new customer, so upsert customer 
+    /* if card.id (tokenId) exists and no customerId, this is a new customer, so upsert customer 
        first then create charge
     */
-    if (stripeToken) {
+    if (stripeToken && !customerId) {
         upsertStripeCustomer(stripeToken, customerId).then(function(customer) {
             console.log("upserted customer: ", customer);
             stripe.charges.create({
