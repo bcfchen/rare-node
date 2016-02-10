@@ -2,6 +2,7 @@ var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
     stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
+    sendgrid = require('sendgrid')('YOUR_SENDGRID_API_KEY'),
     bodyParser = require('body-parser');
 app.use(bodyParser.json({
     type: 'application/json'
@@ -12,6 +13,19 @@ app.all('*', function(req, res, next) {
     res.header('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
     res.header("Access-Control-Allow-Origin", "*");
     next();
+});
+
+
+app.post('/send-email', function(req, res) {
+    var appointment = req.body.appointment,
+        user = req.body.user;
+
+    sendgrid.send({
+        to: [user.email, 'friend@rarenails.co'],
+        from:'friend@rarenails.co',
+        subject: 'Your appointment made',
+        text: 'some email text here'
+    });
 });
 
 app.post('/stripe/charge', function(req, res) {
