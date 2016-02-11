@@ -4,10 +4,11 @@ var express = require('express'),
     stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
     sendgrid = require('sendgrid')('YOUR_SENDGRID_API_KEY'),
     bodyParser = require('body-parser'),
+    firebase = require('firebase'),
     Q = require('Q'),
     request = require('request');
 
-var twilioService, twilioAuthService;
+var twilioService, twilioAuthService, firebaseUserService, userAuthService;
 app.use(bodyParser.json({
     type: 'application/json'
 }));
@@ -126,6 +127,7 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
     }
 });
 
+/* initialize services */
 
 (function setupTwilioServices() {
     twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
@@ -137,6 +139,25 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
     twilioService.init(accountSid, authToken);
     twilioAuthService.setFromNumber(fromNumber);
 })();
+
+(function setupFirebaseService(){
+    firebaseUserService = require(__dirname + '/services/firebase/firebase-user-service.js')(Q, firebase);
+    firebaseUserService.setBaseUrl("https://nailartist.firebaseio.com");
+})();
+
+(function setupUserAuthService(){
+    userAuthService = require(__dirname + '/services/auth/user-auth-service.js')(Q, firebaseUserService, twilioAuthService);
+})();
+
+app.post('/auth/get-credentials', function(req, res){
+    var phoneNumber = req.body.phoneNumber,
+        code = req.body.code;
+    userAuthService.login(phoneNumber, code).then(function success(userInfo){
+        res.send(200, userInfo);
+    }, function error(err){
+        res.send(500, err);
+    });
+});
 
 app.post('/twilio/send-code', function(req, res) {
     var toNumber = req.body.phoneNumber,
