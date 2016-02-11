@@ -3,7 +3,9 @@ var express = require('express'),
     server = require('http').createServer(app),
     stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
     sendgrid = require('sendgrid')('YOUR_SENDGRID_API_KEY'),
-    bodyParser = require('body-parser');
+    bodyParser = require('body-parser'),
+    Q = require('Q'),
+    request = require('request');
 app.use(bodyParser.json({
     type: 'application/json'
 }));
@@ -120,6 +122,18 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
     } catch (e) {
         res.status(404).end();
     }
+});
+
+app.get('/twilio/send-sms', function(res, req){
+    var account = {
+
+    };
+    var twilioService = require(__dirname + '/services/twilio/twilio-service.js')
+        (Q, request);
+    twilioService.init();
+    return twilioService.create().then(function(results){
+            res.send(200, results);
+        });;
 });
 
 app.get('/status', function(req, res) {
