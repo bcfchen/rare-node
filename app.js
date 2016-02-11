@@ -24,7 +24,7 @@ app.post('/send-email', function(req, res) {
 
     sendgrid.send({
         to: [user.email, 'friend@rarenails.co'],
-        from:'friend@rarenails.co',
+        from: 'friend@rarenails.co',
         subject: 'Your appointment made',
         text: 'some email text here'
     });
@@ -124,16 +124,21 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
     }
 });
 
-app.get('/twilio/send-sms', function(res, req){
-    var account = {
+app.post('/twilio/send-sms', function(req, res) {
+    var accountSid = "ACe79928940d39103df64d9bac1fd06a9f",
+        authToken = "839a92ea384334275a5871970b5be354",
+        phoneNumber = req.body.phoneNumber,
+        fromNumber = '+19252415828';
 
-    };
-    var twilioService = require(__dirname + '/services/twilio/twilio-service.js')
-        (Q, request);
-    twilioService.init();
-    return twilioService.create().then(function(results){
-            res.send(200, results);
-        });;
+    var twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
+    twilioService.init(accountSid, authToken);
+    return twilioService.create('Messages', {
+                From: fromNumber,
+                To: phoneNumber,
+                Body: "test"
+            }).then(function(results) {
+        res.send(200, results);
+    });;
 });
 
 app.get('/status', function(req, res) {
