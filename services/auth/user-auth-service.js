@@ -17,9 +17,9 @@ module.exports = exports = function(Q, firebaseUserService, twilioAuthService) {
     }
 
     function __getFirebaseAccessData(phoneNumber, code){
-    	return firebaseUserService.get(phoneNumber).then(function(password){
-    		if (password){
-    			return password;
+    	return firebaseUserService.get(phoneNumber).then(function(data){
+    		if (data.password){
+    			return data;
     		} else {
     			console.log("creating user with: ", phoneNumber);
     			return firebaseUserService.create(phoneNumber,code );

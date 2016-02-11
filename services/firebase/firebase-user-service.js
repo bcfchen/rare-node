@@ -40,7 +40,10 @@ module.exports = exports = function(Q, Firebase) {
                     var password = snapshot ? snapshot.val() : snapshot;
                     console.log("pass", password);
 
-                    deferred.resolve(password);
+                    deferred.resolve({
+                        password: password,
+                        uid: authData.uid
+                    });
                 }, function(err){
                     console.log("cannot read password: ", err);
                     deferred.reject(err);
@@ -82,12 +85,12 @@ module.exports = exports = function(Q, Firebase) {
         return deferred.promise;
     }
 
-    function __addUser(phoneNumber, password) {
+    function __addUser(phoneNumber, userData) {
         var deferred = Q.defer();
         var usersRef = new Firebase(baseUrl + "/users");
         var newUserRef = usersRef.push({
             phoneNumber: phoneNumber,
-            password: password
+            uid: userData.uid
         }, function() {
             console.log("regular user added with: ", newUserRef.key());
 
@@ -126,16 +129,24 @@ module.exports = exports = function(Q, Firebase) {
             return __getPassword(phoneNumber);
         },
         create: function(phoneNumber, code) {
-            var password = phoneNumber + "-" + code;
+            var password = phoneNumber + "-" + code,
+                uid = "";
             console.log("starting firebaseuserservice create:", password);
-            return __addAuthUser(phoneNumber, password).then(function() {
-                    return __addUser(phoneNumber, password);
+            return __addAuthUser(phoneNumber, password).then(function(userData) {
+                    uid = userData.uid;
+                    return __addUser(phoneNumber, userData);
                 })
                 .then(function(userId) {
                     return __createPhoneUser(phoneNumber, userId, password);
                 })
                 .then(function() {
                     return __addPassword(phoneNumber, password);
+                })
+                .then(function(password){
+                    return {
+                        password: password,
+                        uid: uid
+                    };
                 });
         },
         setBaseUrl: __setBaseUrl
