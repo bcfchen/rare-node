@@ -30,17 +30,20 @@ module.exports = exports = function(Q, Firebase) {
         var ref = new Firebase(baseUrl + "/passwords/" + phoneNumber);
         ref.authWithPassword({
             email: "admin@rare.com",
-            password: RARE_ADMIN_PASSWORD
+            password: "rareAdmin"
         }, function(error, authData) {
             if (error) {
-                deferred.reject(err);
+                deferred.reject(error);
             } else {
-                console.log("getting password for:", phoneNumber);
+                console.log("getting password for:", authData);
                 ref.once("value", function(snapshot) {
                     var password = snapshot ? snapshot.val() : snapshot;
                     console.log("pass", password);
 
                     deferred.resolve(password);
+                }, function(err){
+                    console.log("cannot read password: ", err);
+                    deferred.reject(err);
                 });
             }
         });
