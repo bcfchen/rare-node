@@ -1,10 +1,51 @@
 //assorted customer choice factory
 module.exports = exports = function(Q, Firebase) {
     var baseUrl;
-    var RARE_PASSWORD = "rarePassword";
+    var RARE_ADMIN_PASSWORD = "rareAdmin";
 
     function __setBaseUrl(url) {
         baseUrl = url;
+    }
+
+    function __addPassword(phoneNumber, password) {
+        var deferred = Q.defer();
+        var ref = new Firebase(baseUrl + "/passwords/" + phoneNumber);
+        console.log("creating password for:", phoneNumber, password);
+        ref.set(password, function(err) {
+            if (err) {
+                console.log("creating password failed with: ", err);
+
+                deferred.reject(err);
+            } else {
+                console.log("password created: ", password);
+                deferred.resolve(password);
+            }
+        });
+
+        return deferred.promise;
+    }
+
+    function __getPassword(phoneNumber) {
+        var deferred = Q.defer();
+        var ref = new Firebase(baseUrl + "/passwords/" + phoneNumber);
+        ref.authWithPassword({
+            email: "admin@rare.com",
+            password: RARE_ADMIN_PASSWORD
+        }, function(error, authData) {
+            if (error) {
+                deferred.reject(err);
+            } else {
+                console.log("getting password for:", phoneNumber);
+                ref.once("value", function(snapshot) {
+                    var password = snapshot ? snapshot.val() : snapshot;
+                    console.log("pass", password);
+
+                    deferred.resolve(password);
+                });
+            }
+        });
+
+        return deferred.promise;
     }
 
     function __getPhoneUser(phoneNumber) {
@@ -79,21 +120,20 @@ module.exports = exports = function(Q, Firebase) {
 
     return {
         get: function(phoneNumber) {
-            return __getPhoneUser(phoneNumber).then(function(userId) {
-                return {
-                    id: userId,
-                    password: RARE_PASSWORD
-                };
-            });
+            return __getPassword(phoneNumber);
         },
         create: function(phoneNumber, code) {
-            var password = phoneNumber + "-" + code; 
+            var password = phoneNumber + "-" + code;
             console.log("starting firebaseuserservice create:", password);
-            return __addAuthUser(phoneNumber, password).then(function(){
-                return __addUser(phoneNumber, password);
-            }).then(function(userId) {
-                return __createPhoneUser(phoneNumber, userId, password);
-            });
+            return __addAuthUser(phoneNumber, password).then(function() {
+                    return __addUser(phoneNumber, password);
+                })
+                .then(function(userId) {
+                    return __createPhoneUser(phoneNumber, userId, password);
+                })
+                .then(function() {
+                    return __addPassword(phoneNumber, password);
+                });
         },
         setBaseUrl: __setBaseUrl
     }
