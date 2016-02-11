@@ -6,6 +6,8 @@ var express = require('express'),
     bodyParser = require('body-parser'),
     Q = require('Q'),
     request = require('request');
+
+var twilioService, twilioAuthService;
 app.use(bodyParser.json({
     type: 'application/json'
 }));
@@ -124,21 +126,39 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
     }
 });
 
-app.post('/twilio/send-sms', function(req, res) {
+
+(function setupTwilioServices() {
+    twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
+    twilioAuthService = require(__dirname + '/services/twilio/twilio-auth-service.js')(Q, twilioService);
     var accountSid = "ACe79928940d39103df64d9bac1fd06a9f",
         authToken = "839a92ea384334275a5871970b5be354",
-        phoneNumber = req.body.phoneNumber,
         fromNumber = '+19252415828';
 
-    var twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
     twilioService.init(accountSid, authToken);
-    return twilioService.create('Messages', {
-                From: fromNumber,
-                To: phoneNumber,
-                Body: "test"
-            }).then(function(results) {
+    twilioAuthService.setFromNumber(fromNumber);
+})();
+
+app.post('/twilio/send-code', function(req, res) {
+    var toNumber = req.body.phoneNumber,
+        msgBody = req.body.message;
+
+    twilioAuthService.sendCode(toNumber, msgBody).then(function(results) {
         res.send(200, results);
-    });;
+    }, function error(err) {
+        res.send(500, err);
+    });
+});
+
+app.post('/twilio/verify-code', function(req, res) {
+    var phoneNumber = req.body.phoneNumber,
+        code = req.body.code;
+
+    var isValid = twilioAuthService.verifyCode(phoneNumber, code);
+    if (isValid){
+        res.send(200, "Validation success");
+    } else {
+        res.send(422, "Code validation failed");
+    }
 });
 
 app.get('/status', function(req, res) {
