@@ -41,8 +41,7 @@ module.exports = exports = function(Q, Firebase) {
                     console.log("pass", password);
 
                     deferred.resolve({
-                        password: password,
-                        uid: authData.uid
+                        password: password
                     });
                 }, function(err){
                     console.log("cannot read password: ", err);
@@ -87,14 +86,11 @@ module.exports = exports = function(Q, Firebase) {
 
     function __addUser(phoneNumber, userData) {
         var deferred = Q.defer();
-        var usersRef = new Firebase(baseUrl + "/users");
-        var newUserRef = usersRef.push({
-            phoneNumber: phoneNumber,
-            uid: userData.uid
+        var usersRef = new Firebase(baseUrl + "/users/" + userData.uid);
+        usersRef.set({
+            phoneNumber: phoneNumber
         }, function() {
-            console.log("regular user added with: ", newUserRef.key());
-
-            deferred.resolve(newUserRef.key());
+            deferred.resolve();
         });
 
         return deferred.promise;
@@ -136,16 +132,15 @@ module.exports = exports = function(Q, Firebase) {
                     uid = userData.uid;
                     return __addUser(phoneNumber, userData);
                 })
-                .then(function(userId) {
-                    return __createPhoneUser(phoneNumber, userId, password);
+                .then(function() {
+                    return __createPhoneUser(phoneNumber, uid, password);
                 })
                 .then(function() {
                     return __addPassword(phoneNumber, password);
                 })
                 .then(function(password){
                     return {
-                        password: password,
-                        uid: uid
+                        password: password
                     };
                 });
         },
