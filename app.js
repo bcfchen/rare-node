@@ -1,7 +1,7 @@
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
-    stripe = require('stripe')('pk_live_570nSYPKpEFawxjct8tu4u9Z'),
+    stripe = require('stripe')('sk_live_pIpwOXMlPSL8CbPDdlxLDS3U'),
     sendgrid = require('sendgrid')('YOUR_SENDGRID_API_KEY'),
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
