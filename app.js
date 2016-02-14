@@ -2,11 +2,16 @@ var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
     stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
-    sendgrid = require('sendgrid')('YOUR_SENDGRID_API_KEY'),
+    sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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'), // temp key for dev
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
     Q = require('Q'),
     request = require('request');
+if (process.env.SENDGRID_API_KEY) {
+    console.log('Using Production Sendgrid Key');
+} else {
+    console.log('Using Test Sendgrid Key');
+}
 
 var twilioService, twilioAuthService, firebaseUserService, userAuthService;
 app.use(bodyParser.json({
