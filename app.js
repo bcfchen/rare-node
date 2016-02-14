@@ -28,8 +28,77 @@ app.post('/send-email', function(req, res) {
     sendgrid.send({
         to: [user.email, 'friend@rarenails.co'],
         from: 'friend@rarenails.co',
-        subject: 'Your appointment made',
-        text: 'some email text here'
+        subject: 'Your RARE appointment on ' + appointment.date,
+        "sub": { // NOTE duplicate fields, b/c we are sending two copies
+            ":firstName": [
+                user.firstName,
+                user.firstName
+            ],
+            ":lastName": [
+                user.lastName,
+                user.lastName
+            ],
+            ":style": [
+                appointment.productName,
+                appointment.productName
+            ],
+            ":date": [
+                appointment.date,
+                appointment.date
+            ],
+            ":specialInstructions": [
+                user.address.specialInstructions ? user.address.specialInstructions : "None",
+                user.address.specialInstructions ? user.address.specialInstructions : "None"
+            ],
+            ":cardType": [
+                user.paymentInfo.brand,
+                user.paymentInfo.brand
+            ],
+            ":cardLastFour": [
+                user.paymentInfo.number,
+                user.paymentInfo.number
+            ],
+            ":cardExp": [
+                user.paymentInfo.expiry,
+                user.paymentInfo.expiry
+            ],
+            ":price": [
+                "$" + appointment.price,
+                "$" + appointment.price
+            ],
+            ":addressLine1": [
+                user.address.streetAddress,
+                user.address.streetAddress
+            ],
+            ":addressLine2": [
+                user.address.apartmentNumber,
+                user.address.apartmentNumber
+            ],
+            ":addressCity": [
+                user.address.city,
+                user.address.city
+            ],
+            ":addressState": [
+                user.address.state,
+                user.address.state
+            ],
+            ":addressZip": [
+                user.address.zipCode,
+                user.address.zipCode
+            ],
+            ":phoneNumber": [
+                user.phoneNumber,
+                user.phoneNumber
+            ]
+        },
+        "filters": {
+            "templates": {
+              "settings": {
+                "enable": 1,
+                "template_id": "b8ee01fd-9449-4154-88a9-78c6596e687a"
+              }
+            }
+        }
     });
 });
 
