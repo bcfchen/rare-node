@@ -36,8 +36,8 @@ app.post('/send-email', function(req, res) {
         to:         user.email,
         from:       'friend@rarenails.co',
         subject:    'Your RARE appointment on ' + appointment.date,
-        text:       '',
-        html:       ''
+        text:       ' ',
+        html:       ' '
     });
     // ADD THE SUBSTITUTION VALUES
     var subs = {
