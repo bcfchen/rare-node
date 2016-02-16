@@ -1,8 +1,8 @@
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
-    stripe = require('stripe')('sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
-    sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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'), // temp key for dev
+    stripe = require('stripe')(process.env.STRIPE_API_KEY || 'sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
+    sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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', {api: 'smtp'}), // temp key for dev
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
     Q = require('Q'),
@@ -25,84 +25,71 @@ app.all('*', function(req, res, next) {
     next();
 });
 
-
 app.post('/send-email', function(req, res) {
     var appointment = req.body.appointment,
         user = req.body.user;
-
-    sendgrid.send({
-        to: [user.email, 'friend@rarenails.co'],
-        from: 'friend@rarenails.co',
-        subject: 'Your RARE appointment on ' + appointment.date,
-        "sub": { // NOTE duplicate fields, b/c we are sending two copies
-            ":firstName": [
-                user.firstName,
-                user.firstName
-            ],
-            ":lastName": [
-                user.lastName,
-                user.lastName
-            ],
-            ":style": [
-                appointment.productName,
-                appointment.productName
-            ],
-            ":date": [
-                appointment.date,
-                appointment.date
-            ],
-            ":specialInstructions": [
-                user.address.specialInstructions ? user.address.specialInstructions : "None",
-                user.address.specialInstructions ? user.address.specialInstructions : "None"
-            ],
-            ":cardType": [
-                user.paymentInfo.brand,
-                user.paymentInfo.brand
-            ],
-            ":cardLastFour": [
-                user.paymentInfo.number,
-                user.paymentInfo.number
-            ],
-            ":cardExp": [
-                user.paymentInfo.expiry,
-                user.paymentInfo.expiry
-            ],
-            ":price": [
-                "$" + appointment.price,
-                "$" + appointment.price
-            ],
-            ":addressLine1": [
-                user.address.streetAddress,
-                user.address.streetAddress
-            ],
-            ":addressLine2": [
-                user.address.apartmentNumber,
-                user.address.apartmentNumber
-            ],
-            ":addressCity": [
-                user.address.city,
-                user.address.city
-            ],
-            ":addressState": [
-                user.address.state,
-                user.address.state
-            ],
-            ":addressZip": [
-                user.address.zipCode,
-                user.address.zipCode
-            ],
-            ":phoneNumber": [
-                user.phoneNumber,
-                user.phoneNumber
-            ]
-        },
-        "filters": {
-            "templates": {
-              "settings": {
-                "enable": 1,
-                "template_id": "b8ee01fd-9449-4154-88a9-78c6596e687a"
-              }
+    console.log('In /send-email');
+    console.log('>>>>> APPOINTMENT <<<<<\n' + JSON.stringify(appointment, null, 2));
+    console.log('>>>>>     USER    <<<<<\n' + JSON.stringify(user, null, 2));
+    var Email = sendgrid.Email;
+    var email = new Email({
+        to:         user.email,
+        from:       'friend@rarenails.co',
+        subject:    'Your RARE appointment on ' + appointment.date,
+        text:       'This is a plain text email TEST!',
+        html:       'This is an HTML email TEST!'
+    });
+    // ADD THE SUBSTITUTION VALUES
+    var subs = {
+        ":firstName":       [user.firstName],
+        ":lastName":        [user.lastName],
+        ":style":           [appointment.productName],
+        ":date":            [appointment.date],
+        ":specialInstructions": [user.address.specialInstructions ? user.address.specialInstructions : "None"],
+        ":cardType":        [user.paymentInfo.brand],
+        ":cardLastFour":    [user.paymentInfo.number],
+        ":cardExp":         [user.paymentInfo.expiry],
+        ":price":           ["$" +appointment.price],
+        ":addressLine1":    [user.address.streetAddress],
+        ":addressLine2":    [user.address.apartmentNumber],
+        ":addressCity":     [user.address.city],
+        ":addressState":    [user.address.state],
+        ":addressZip":      [user.address.zipCode],
+        ":phoneNumber":     [user.phoneNumber]
+    }
+    for (var tag in subs) {
+        email.addSubstitution(tag, subs[tag]);
+    }
+    // ADD THE CATEGORIES
+    var categories = [
+        "Appointment Booking"
+    ];
+    console.log('This is the email object:\n' + JSON.stringify(email, null, 2));
+    // ADD THE APP FILTERS
+    email.setFilters({
+        "bcc": {
+            "settings": {
+                "enable": "1",
+                "email": "friend@rarenails.co"
             }
+        },
+        "templates": {
+            "settings": {
+                "enable": "1",
+                "template_id": "b8ee01fd-9449-4154-88a9-78c6596e687a"
+            }
+        }
+    });
+    for (var i = 0; i < categories.length; i++) {
+        email.addCategory(categories[i]);
+    }
+    sendgrid.send(email, function(err, response) {
+        console.log('Response:\n' + JSON.stringify(response));
+        if (err) {
+            console.error(err);
+            res.status(400).send(err);
+        } else {
+            res.status(200).send(response);    
         }
     });
 });
