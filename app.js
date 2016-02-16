@@ -5,7 +5,7 @@ var express = require('express'),
     sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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', {api: 'smtp'}), // temp key for dev
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
-    Q = require('Q'),
+    Q = require('q'),
     request = require('request');
 if (process.env.SENDGRID_API_KEY) {
     console.log('Using Production Sendgrid Key');
@@ -105,9 +105,6 @@ app.post('/stripe/charge', function(req, res) {
         res.send(500, "Must provide customerId or tokenId");
     }
 
-    console.log("card ", card);
-    console.log("amount ", amount);
-
     /* if card.id (tokenId) exists and no customerId, this is a new customer, so upsert customer 
        first then create charge
     */
@@ -193,9 +190,9 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
 (function setupTwilioServices() {
     twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
     twilioAuthService = require(__dirname + '/services/twilio/twilio-auth-service.js')(Q, twilioService);
-    var accountSid = "ACe79928940d39103df64d9bac1fd06a9f",
-        authToken = "839a92ea384334275a5871970b5be354",
-        fromNumber = '+19252415828';
+    var accountSid = "AC8b36caff6e2efe2cc52ba9c3adca65aa",
+        authToken = "d7487cf487722e6167895d74e11a70d0",
+        fromNumber = '+14152756413';
 
     twilioService.init(accountSid, authToken);
     twilioAuthService.setFromNumber(fromNumber);
