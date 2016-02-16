@@ -1,7 +1,7 @@
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
-    stripe = require('stripe')(process.env.STRIPE_API_KEY || 'sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
+    stripe = require('stripe')(process.env.STRIPE_API_KEY || 'sk_live_pIpwOXMlPSL8CbPDdlxLDS3U'),
     sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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', {api: 'smtp'}), // temp key for dev
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
