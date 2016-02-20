@@ -1,11 +1,12 @@
 var express = require('express'),
     app = express(),
     server = require('http').createServer(app),
-    stripe = require('stripe')(process.env.STRIPE_API_KEY || 'sk_live_pIpwOXMlPSL8CbPDdlxLDS3U'),
+    stripe = require('stripe')(process.env.STRIPE_API_KEY || 'sk_test_ZRz70EBxStjlGr9qqEF7NgWu'),
     sendgrid = require('sendgrid')(process.env.SENDGRID_API_KEY || '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', {api: 'smtp'}), // temp key for dev
     bodyParser = require('body-parser'),
     firebase = require('firebase'),
     Q = require('q'),
+    TwilioAuthService = require('node-twilio-verify'),
     request = require('request');
 if (process.env.SENDGRID_API_KEY) {
     console.log('Using Production Sendgrid Key');
@@ -13,7 +14,7 @@ if (process.env.SENDGRID_API_KEY) {
     console.log('Using Test Sendgrid Key');
 }
 
-var twilioService, twilioAuthService, firebaseUserService, userAuthService;
+var firebaseUserService, userAuthService, twilioAuthService;
 app.use(bodyParser.json({
     type: 'application/json'
 }));
@@ -24,6 +25,8 @@ app.all('*', function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     next();
 });
+
+setupTwilioServices();
 
 app.post('/send-email', function(req, res) {
     var appointment = req.body.appointment,
@@ -187,16 +190,16 @@ app.get('/stripe/getCustomer/:customerId', function(req, res) {
 
 /* initialize services */
 
-(function setupTwilioServices() {
-    twilioService = require(__dirname + '/services/twilio/twilio-service.js')(Q, request);
-    twilioAuthService = require(__dirname + '/services/twilio/twilio-auth-service.js')(Q, twilioService);
+function setupTwilioServices() {
+
     var accountSid = "AC8b36caff6e2efe2cc52ba9c3adca65aa",
         authToken = "d7487cf487722e6167895d74e11a70d0",
         fromNumber = '+14152756413';
 
-    twilioService.init(accountSid, authToken);
+    twilioAuthService = new TwilioAuthService();
+    twilioAuthService.init(accountSid, authToken);
     twilioAuthService.setFromNumber(fromNumber);
-})();
+};
 
 (function setupFirebaseService(){
     firebaseUserService = require(__dirname + '/services/firebase/firebase-user-service.js')(Q, firebase);

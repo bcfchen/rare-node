@@ -17,6 +17,7 @@
     "q": "1.4.1",
     "request": "2.69.0",
     "sendgrid": "^1.9.2",
-    "stripe": "^4.0.0"
+    "stripe": "^4.0.0",
+    "node-twilio-verify": "1.0.0"
   }
 }
